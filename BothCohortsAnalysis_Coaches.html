@@ -3018,6 +3018,7 @@ vertical-align: -.125em;
   <ul class="collapse">
   <li><a href="#client-session-format" id="toc-client-session-format" class="nav-link" data-scroll-target="#client-session-format">Client session format</a></li>
   </ul></li>
+  <li><a href="#certification" id="toc-certification" class="nav-link" data-scroll-target="#certification">Certification</a></li>
   </ul>
 </nav>
 </div>
@@ -3403,7 +3404,35 @@ Strongly disagree</p>
 <section id="client-session-format" class="level3">
 <h3 class="anchored" data-anchor-id="client-session-format">Client session format</h3>
 <p>1 = “Individual sessions/case mgmt”, = “Group sessions”, = “Service referrals”, = “Other” </p>
+<div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by &#39;Item&#39;. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   Item [4]
+  Item       Response Count Proportion
+  &lt;chr&gt;      &lt;fct&gt;    &lt;int&gt;      &lt;dbl&gt;
+1 services_1 1           38          1
+2 services_2 1           29          1
+3 services_3 1           21          1
+4 services_4 1            4          1</code></pre>
+</div>
+</div>
 </section>
+</section>
+<section id="certification" class="level2">
+<h2 class="anchored" data-anchor-id="certification">Certification</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>   prc_certify  n proportion
+1          Yes 30 0.35294118
+2           No 39 0.45882353
+3        Other  5 0.05882353
+4 Missing Data 11 0.12941176</code></pre>
+</div>
+</div>
 </section>
 
 </main>
