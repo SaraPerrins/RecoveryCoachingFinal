@@ -1,0 +1,727 @@
+---
+title: "Final Report Analysis: Recovery Coaches"
+subtitle: "Survey analysis output for cohorts 1 and 2 combined"
+date: "April 3, 2024"
+format:
+  html:
+    toc: true
+    toc-expand: 5
+    toc-location: left
+    html-math-method: katex
+    self-contained: true
+editor: visual
+theme: pulse
+code-block-bg: true
+execute:
+  echo: false
+---
+
+This html displays the key outputs of the analysis for the final sample of *N* = 85 recovery coaches. The table of contents on the left can be used to navigate across descriptive statistic categories. *Please note that response rates are still being calculated and will be included in the final report draft 
+
+```{r}
+#| label: Packages
+#| include: False
+#| warning: False
+#| echo: False
+
+#Packages to load
+packages <- c("readxl",'ggplot2', 'tidyverse', 'nlme', 'openxlsx', 'knitr', "Hmisc", "rmarkdown", "dplyr", "tidyr", "emmeans","fixest","modelsummary", "purrr", "haven")
+# install.packages(packages)
+lapply(packages, library, character.only=TRUE)
+```
+
+```{r}
+#| label: Create cohort 2 combined data frame
+#| include: False
+
+# Function to read all csv and xlsx files from a folder, mutate columns, and merge them by common columns 
+read_and_merge_files <- function(folder_name) 
+  {folder_path <- file.path(getwd(), folder_name) # List all CSV and XLSX files in the specified folder 
+  csv_files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = TRUE)
+  xlsx_files <- list.files(path = folder_path, pattern = "\\.xlsx$", full.names = TRUE) # Initialize an empty list to store data frames 
+
+  df_list <- list() # Function to mutate columns to numeric or factor
+  mutate_columns <- function(df) { 
+    numeric_vars <- c("Status", "IPAddress", "Progress", "Duration (in seconds)", "Finished") 
+    # Ensure we only mutate columns that exist in the dataframe
+  existing_numeric_vars <- numeric_vars[numeric_vars %in% names(df)]
+  factor_vars <- setdiff(names(df), existing_numeric_vars)
+  df <- df %>% mutate(across(all_of(existing_numeric_vars), ~as.numeric(as.character(.)))) %>% mutate(across(all_of(factor_vars), as.factor)) 
+  return(df) } # Read and mutate each CSV file and store it in the list
+  for (file in csv_files) { 
+    temp_df <- read.csv(file, stringsAsFactors = FALSE) %>% 
+      mutate_columns() 
+    df_list[[length(df_list) + 1]] <- temp_df } # Read and mutate each XLSX file and store it in the list 
+  for (file in xlsx_files) { 
+    temp_df <- read_excel(file, guess_max = 1000000) %>% 
+      mutate(across(everything(), as.character)) %>% 
+      mutate_columns() 
+    df_list[[length(df_list) + 1]] <- temp_df } 
+  
+  
+  # Find common column headers across all data frames
+  # common_columns <- Reduce(intersect, lapply(df_list, names)) #umns and combine them
+  # df <- bind_rows(lapply(df_list, `[`, common_columns))
+  df<- bind_rows(df_list) 
+  names(df) <- gsub("now_", "", names(df))
+  return(df) }
+
+
+# Merge files from each folder and combine them into a single data frame
+df_directors_c2 <- read_and_merge_files("Project Director_cohort2")
+df_beneficiaries_c2 <- read_and_merge_files("Beneficiary_cohort2")
+df_coaches_c2 <- read_and_merge_files("PRC_cohort2")
+df_comparison_c2 <- read_and_merge_files("Comparison_cohort2")
+df_americorps_c2 <- read_and_merge_files("AmeriCorps Volunteer_cohort2")
+
+```
+
+```{r}
+#| label: Reading in C1 data
+#| include: False
+#ORC_PRC_survey_all_3_26_24_1_ <- read_sav("~/Downloads/ORC_PRC survey all_3.26.24 (1).sav")
+#write.csv(ORC_PRC_survey_all_3_26_24_1_, "~/Desktop/R/RC_Cohort2/PRC_bothcohorts/Cohort1Coaches.csv")
+
+# # Function to read all csv and xlsx files from a folder, mutate columns, and merge them by common columns 
+# read_and_merge_nospaces <- function(folder_name) 
+#   {folder_path <- file.path(getwd(), folder_name) # List all CSV and XLSX files in the specified folder 
+#   csv_files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = TRUE)
+#   xlsx_files <- list.files(path = folder_path, pattern = "\\.xlsx$", full.names = TRUE) # Initialize an empty list to store data frames 
+# 
+#   df_list <- list() # Function to mutate columns to numeric or factor
+#   mutate_columns <- function(df) { 
+#     df <- mutate_all(df, as.factor)
+#   return(df) } # Read and mutate each CSV file and store it in the list
+#   for (file in csv_files) { 
+#     temp_df <- read.csv(file, stringsAsFactors = FALSE) %>% 
+#       mutate_columns() 
+#     df_list[[length(df_list) + 1]] <- temp_df } # Read and mutate each XLSX file and store it in the list 
+#   for (file in xlsx_files) { 
+#     temp_df <- read_excel(file, guess_max = 1000000) %>% 
+#       mutate(across(everything(), as.character)) %>% 
+#       mutate_columns() 
+#     df_list[[length(df_list) + 1]] <- temp_df } 
+#   
+#   
+#   # Find common column headers across all data frames
+#   # common_columns <- Reduce(intersect, lapply(df_list, names)) #umns and combine them
+#   # df <- bind_rows(lapply(df_list, `[`, common_columns))
+#   df<- bind_rows(df_list) 
+#   return(df) }
+# 
+# df_coaches_c1 <- read_and_merge_nospaces("PRC_C1")
+# 
+# # Mismatched column names detected. 
+# library(tidyr)
+# 
+# #Finding mismatched columns:
+# cols_with_ellipsis <- colnames(df_coaches_c1)[grep("\\.\\.\\.", colnames(df_coaches_c1))]
+# print(cols_with_ellipsis)
+# # merging columns with a common string in their names
+# 
+# # Find common strings in column names (this step depends on the actual column names)
+# common_strings <- c("RecipientLastName", "RecipientFirstName", "RecipientEmail", "train_hours", "train_format", "train_deliver", "train_manual", "train_helpful","serve_hours", "training_format", "services", "increase_abilities","org_support")
+# 
+# # For each common string, unite the columns that contain that string
+# for (str in common_strings) {
+#   cols_to_unite <- names(df_coaches_c1)[grepl(str, names(df_coaches_c1))]
+#   if (length(cols_to_unite) > 1) {
+#     df_coaches_c1 <- df_coaches_c1 %>%
+#       unite(str, all_of(cols_to_unite), sep = "_", remove = TRUE)
+#   }
+# }
+
+# filepath <- "~/Desktop/R/RC_Cohort2/PRC_bothcohorts/df_coaches_c1.csv"
+# write.csv(df_coaches_c1, file = filepath)
+```
+
+```{r}
+#| label: Merge C1 C2 Coach DFs
+#| include: False
+
+df_coaches_both <- read_and_merge_files("PRC_bothcohorts")
+
+#Cleaning
+df_coaches_both <- subset(df_coaches_both, Progress >50  &DistributionChannel != "qr" & DistributionChannel != "preview" | is.na(Progress) & consent_agree == 1 )  #Leaves us with N = 85
+
+```
+
+
+## Coaches Descriptive Statistics (N = 85)
+
+### Age
+
+About 68% of the coaches were between ages 18 and 49.  
+
+```{r}
+#| label: Coaches_Descriptives_Age
+
+Results_Coaches_Age <- df_coaches_both %>%
+  count(dem_age) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(Age = c("18-29","30-39", "40-49","50-59", "60-69","70-79", "Missing Data"))
+
+print(Results_Coaches_Age)
+
+```
+
+### Gender
+
+61% identified as female while only 22% identified as male.
+
+```{r}
+#| label: Coaches_Descriptives_Gender
+
+#Recoding so that the gender are a single column
+df_coaches_both$dem_gender <- NA
+df_coaches_both$dem_gender[df_coaches_both$dem_gender_1 == 1] <- 1 # Male 
+df_coaches_both$dem_gender[df_coaches_both$dem_gender_2 == 1] <- 2 # Female 
+df_coaches_both$dem_gender[df_coaches_both$dem_gender_3 == 1] <- 3 # Non-binary 
+df_coaches_both$dem_gender[df_coaches_both$dem_gender_4 == 1] <- 4 # Prefers to self describe  
+df_coaches_both$dem_gender[df_coaches_both$dem_gender_5 == 1] <- 5 #Prefer not to say 
+
+df_coaches_both$dem_gender <- as.factor(df_coaches_both$dem_gender)
+
+
+Results_Coaches_Gender <- df_coaches_both %>%
+  count(dem_gender) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(Gender = c("Male", "Female", "Non-binary", "Prefer to self describe", "Prefer not to say", "Missing Data"))
+
+print(Results_Coaches_Gender)
+
+```
+
+### Race
+
+We had *n* = 20 missing data, so this output must be interpreted with caution. 
+
+Coaches predominantly identified as White (59%) or Black/African American (11%).
+
+```{r}
+#| label: Coaches_Descriptives_Race
+
+# Convert to numeric
+for (i in 1:7) {
+  df_coaches_both[[paste0("dem_race_", i)]] <- as.numeric(as.character(df_coaches_both[[paste0("dem_race_", i)]]))
+}
+# Create dem_race_count to check for multiple choice responses 
+df_coaches_both$dem_race_count <- rowSums(df_coaches_both[, paste0("dem_race_", 1:7)], na.rm = TRUE)
+# 
+# table(df_coaches_both$dem_race_count) #confirmed we do not have any multiple choice responses so we can recode into a single column:
+
+#Recoding so that the gender are a single column
+
+# ### This needs to be only for cohort 2. Cohort 1 was one column of dem_race
+# Create 'dem_race_final' based on the conditions provided
+df_coaches_both$dem_race_final <- ifelse(!is.na(df_coaches_both$dem_race), df_coaches_both$dem_race,
+                                         ifelse(df_coaches_both$dem_race_1 == 1, 1,
+                                                ifelse(df_coaches_both$dem_race_2 == 1, 2,
+                                                       ifelse(df_coaches_both$dem_race_3 == 1, 3,
+                                                              ifelse(df_coaches_both$dem_race_4 == 1, 4,
+                                                                     ifelse(df_coaches_both$dem_race_5 == 1, 5, 
+                                                                            ifelse(df_coaches_both$dem_race_6 == 1,6,
+                                                                                   ifelse(df_coaches_both$dem_race_7 == 1, 7, NA))))))))
+
+# summary(df_coaches_both$dem_race_final)
+# table(df_coaches_both$dem_race_final)
+
+
+# df_coaches_both$dem_race_combined <- NA
+# df_coaches_both$dem_race_combined[df_coaches_both$dem_race_1 == 1] <- 1 # White
+# df_coaches_both$dem_race_combined[df_coaches_both$dem_race_2 == 1] <- 2 # Black or African Am
+# df_coaches_both$dem_race_combined[df_coaches_both$dem_race_3 == 1] <- 3 # Am Indian or Alaska Native
+# df_coaches_both$dem_race_combined[df_coaches_both$dem_race_4 == 1] <- 4 # Asian or PI
+# df_coaches_both$dem_race_combined[df_coaches_both$dem_race_5 == 1] <- 5 # Other
+# df_coaches_both$dem_race_combined[df_coaches_both$dem_race_6 == 1] <- 6 # Don't Know
+# df_coaches_both$dem_race_combined[df_coaches_both$dem_race_7 == 1] <- 7 # Prefer not to say
+# df_coaches_both$dem_race_combined <- as.factor(df_coaches_both$dem_race_combined)
+# table(df_coaches_both$dem_race_combined)
+# 
+# 
+Results_Coaches_Race <- df_coaches_both %>%
+  mutate(dem_race = factor(dem_race_final, levels = c("1", "2", "3","4","5","6","7"))) %>%
+  count(dem_race) %>%
+  mutate(proportion = n / sum(n)) %>%
+  mutate(Race = c("White", "Black or African American", "Am Indian/Alaska Native", "Asian or Pacific Islander", "Other", "Missing Data"))
+
+print(Results_Coaches_Race)
+```
+
+### Ethnicity
+
+The majority (82%) of coaches were NOT of Hispanic/Latino/Spanish origin.
+
+```{r}
+#| label: Coach_Descriptives_Ethnicity
+
+Results_Coaches_Eth <- df_coaches_both %>%
+     mutate(dem_ethnicity = factor(dem_ethnicity, levels = c("1", "2", "3"))) %>%
+  count(dem_ethnicity) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(Hispanic_Latino_Spanish_origin = c("Yes","No", "Don't Know", "Missing Data")) 
+
+print(Results_Coaches_Eth)
+
+```
+
+### Education
+
+91% of our sample had obtained high school education or higher, demonstrating education levels are high among coaches.
+
+```{r}
+#| label: Coach_Descriptives_Education
+
+Results_Coaches_Education <- df_coaches_both %>%
+  mutate(dem_education = factor(dem_education, levels = c("1", "2", "3", "4", "5","6","7"))) %>%
+  count(dem_education) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(HighestEducation = c("Some high school","High school grad or equivalent", "Some college or technical school", "College graduate", "Prefer not to say", "Missing Data")) 
+
+print(Results_Coaches_Education)
+```
+
+### Training Hours
+
+**How many hours of recovery coaching training have you received from {organization}**
+
+Coaches who responded most commonly cited 9-16 hrs of training (N = 29) or least 17 hours of recovery coaching training (N = 27).
+
+```{r}
+#| label: Coach_Descriptives_Training
+
+Results_Coaches_Training <- df_coaches_both %>%
+    mutate(training = factor(train_hours, levels = c("1", "2", "3", "4", "5","6"))) %>%
+  count(training) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(HighestEducation = c("None", "Less than 1hr", "1-4hrs","5-8hrs","9-16hrs","17+hrs", "Missing Data")) 
+
+print(Results_Coaches_Training)
+
+
+```
+
+### Training Delivery
+
+**Did someone at your organization deliver the training, or was it delivered by someone outside of the organization?**
+
+N = 16 (19% of surveyed coaches) did not respond to this question, so interpretation must be cautious.46% of responses said instructors were from within the organization, and 31% said outside the organization.
+
+```{r}
+#| label: Coach_Descriptives_Training_Delivery
+
+Results_Coaches_Training_Delivery <- df_coaches_both %>%
+  count(train_deliver) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(TrainingDelivery = c("Instructor from Organization","Instructor from outside the Organization", "Don't Know", "Missing Data")) 
+
+print(Results_Coaches_Training_Delivery)
+
+```
+
+### Training Manual
+
+**Did the training use a specific curriculum or manual?**
+
+N = 16 (19% of surveyed coaches) did not respond to this question, so interpretation must be cautious. 45% of responses said instructors were from within the organization, and 14% said outside the organization.
+
+```{r}
+#| label: Coach_Descriptives_Training_Manual
+
+Results_Coaches_Training_Manual <- df_coaches_both %>%
+    mutate(TrainingManualUsed = factor(train_manual, levels = c("1", "2", "3"))) %>%
+  count(TrainingManualUsed) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(TrainingDelivery = c("Yes","No", "Don't Know", "Missing Data")) 
+
+print(Results_Coaches_Training_Manual)
+
+```
+
+### Training Helpfulness
+
+**How helpful was the training?** Responses were recorded on a 4-point Likert scale: Very Helpful, Helpful, Somewhat Helpful, and Not At All Helpful.\
+N = 17 (20% of surveyed coaches) did not respond to this question, so interpretation must be cautious. Nearly 78% of coaches found the trainings to be Very Helpful or Helpful, and no coaches reported that trainings were Not At All Helpful. 
+
+```{r}
+#| label: Coach_Descriptives_Training_Helpfulness
+
+Results_Coaches_Training_Helpfulness <- df_coaches_both %>%
+    # mutate(TrainingManualUsed = factor(train_manual, levels = c("1", "2", "3"))) %>%
+  count(train_helpful) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(TrainingHelpfulness = c("Very Helpful","Helpful", "Somewhat Helpful", "Missing Data")) 
+
+print(Results_Coaches_Training_Helpfulness)
+
+```
+
+### Abilities
+
+**Please rate the following statements based on whether each factor has increased or decreased for you since becoming a \[Recovery Coach title\].**
+
+-   **My knowledge of risk factors that lead to substance use disorder**
+
+-   **My ability to help individuals with substance use disorder**
+
+-   **My confidence, self-esteem, or self-management**
+
+-   **Skills like teamwork, communication, leadership, or technical skills**
+
+-   **My health, well-being, or fitness**
+
+-   **My sense of community and belonging**
+
+-   **My own ability to stay in recovery**
+
+```{r}
+#| label: Results_Coach_Abilities
+#| include: FALSE
+
+# Summarize the counts and proportion of responses for each item in df_coaches_both
+df_coaches_both_CoachAbilities <- df_coaches_both %>%
+  pivot_longer(cols = increase_abilities_1:increase_abilities_7, names_to = "Item", values_to = "Response") %>%
+  group_by(Item, Response) %>%
+  filter(!is.na(Response)) %>%
+  summarise(Count = n()) %>%
+  mutate(Proportion = Count / sum(Count))%>%
+ungroup() %>%
+  group_by(Item) %>%
+  mutate(TotalProportion = sum(Proportion))
+print(df_coaches_both_CoachAbilities)
+write.csv(df_coaches_both_CoachAbilities, "df_coaches_both_CoachAbilities_NoNAs.csv")
+
+```
+Most coaches reported various factors of knowledge, skills and attitudes have increased or increased greatly for them since becoming a recovery coach. The graph below shows the responses for each of these factors.  
+```{r}
+#| label: Results_Coach_Abilities_plot
+#| include: TRUE
+
+# Plot the responses as stacked barchart
+# Define labels for the legend
+response_labels <- c("1" = "Increased greatly",
+                     "2" = "Increased",
+                     "3" = "Stayed the same",
+                     "4" = "Decreased",
+                     "5" = "Decreased greatly", 
+                     "NA" = "Missing Data")
+
+x_labels <- c(  "increase_abilities_1" = "My knowledge of risk factors that\nlead to substance use disorder (n = 71)",
+  "increase_abilities_2" = "My ability to help individuals \nwith substance use disorder (n = 71)",
+  "increase_abilities_3" = "My confidence, self-esteem, or \nself-management (n = 71)",
+  "increase_abilities_4" = "Skills like teamwork, communication, \nleadership, or technical skills (n = 71)",
+  "increase_abilities_5" = "My health, well-being, or fitness* (n = 70)",
+  "increase_abilities_6" = "My sense of community and\n belonging* (n = 70)",
+  "increase_abilities_7" = "My own ability to stay in recovery (n = 69)")
+ggplot(data = df_coaches_both_CoachAbilities, aes(x = Item, y = Proportion, fill = Response)) +
+  geom_bar(stat = "identity", position = "fill") +
+   geom_text(aes(label = scales::percent(Proportion, accuracy =1)), position = position_stack(vjust = 0.7),  size  =3,check_overlap = TRUE) +
+  ylab("Response") +
+  scale_x_discrete(labels = x_labels)+
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(hjust = 0.2),
+        legend.title = element_blank(),
+        plot.caption.position = "plot") +
+  scale_fill_discrete(labels= response_labels)+
+  coord_flip()+
+  labs(caption = "*'Decreased'accounted for 1.4% for 'My sense of community and belonging', and 2.9% of 'My health, well-being or fitness'")
+
+```
+### Culturally Appropriate Treatment Plans
+
+**The treatment plans I develop with my clients reflect their culture and worldviews. (Select the response that best fits your answer.)** Responses were recorded on a 5-point Likert scale: Completely
+Very well
+Somewhat
+Not very well
+Not at all
+
+
+```{r}
+#| label: Coach_Descriptives_CulturalPlans
+#| include: TRUE
+
+Results_Coaches_CulturalPlans <- df_coaches_both %>%
+    mutate(CulturalPlans = factor(serve_culture, levels = c("1", "2", "3", "4","5"))) %>%
+  count(CulturalPlans) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(CulturalPlans = c("Completely","Very well", "Somewhat", "Not very well", "Not at all", "Missing Data")) 
+
+print(Results_Coaches_CulturalPlans)
+
+```
+### Service Connections for Clients
+
+**What other supports do you connect clients to? (Select all that apply)** 
+Emergency shelters
+Food services
+Employment services
+Physical or behavioral health providers
+Other services (please specify):
+I do not connect individuals to outside resources
+```{r}
+#| label: Results_Coach_ServiceConnections
+#| include: TRUE
+
+# Summarize the counts and proportion of responses for each item in df_coaches_both
+Results_Coach_ServiceConnections <- df_coaches_both %>%
+  pivot_longer(cols = service_connections_1:service_connections_6, names_to = "Item", values_to = "Response") %>%
+  group_by(Item, Response) %>%
+  filter(!is.na(Response)) %>%
+  summarise(Count = n()) %>%
+  mutate(Proportion = Count /85) %>%
+  ungroup() %>%
+  mutate(Service = c("Emergency services","Food services","Employment services", "Physical or behavioral health providers", "Other", "None"))
+
+print(Results_Coach_ServiceConnections)
+
+```
+### Client Frequency
+
+**How often do you see each of the clients you work with?**
+Daily
+One day a week or more
+One or two days a month
+A couple of times per year
+Less than two times per year
+```{r}
+#| label: Coach_Descriptives_ClientFrequency
+#| include: TRUE
+
+Results_Coaches_ClientFrequency <- df_coaches_both %>%
+    mutate(ClientFrequency= factor(serve_clientfreq, levels = c("1", "2", "3", "4","5"))) %>%
+  count(ClientFrequency) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(ClientFrequency = c("Daily","1+ days/week", "1-2days/month", "A couple of times per year", "Less than 2 times per year")) 
+
+print(Results_Coaches_ClientFrequency)
+```
+### Client Hours 
+
+**On average, how much time do you spend with each client per week?**
+Less than 1 hour
+1-4 hours
+5-8 hours
+9-16 hours
+17+ hours
+```{r}
+#| label: Coach_Descriptives_ClientHours
+#| include: TRUE
+
+Results_Coaches_ClientHours<- df_coaches_both %>%
+    mutate(ClientHours= factor(serve_clienthours, levels = c("1", "2", "3", "4","5"))) %>%
+  count(ClientHours) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(ClientHours = c("<1hr","1-4hrs", "5-8hrs", "9-16hrs", "17+hrs", "Missing Data")) 
+
+print(Results_Coaches_ClientHours)
+```
+### Client Interaction Mode  
+
+**How do you interact with clients? (Select all that apply.)**  
+In-person meetings
+Check-in calls
+Video calls (Zoom, Skype, FaceTime, etc.)
+Text messages
+Emails
+Other (please specify):
+```{r}
+#| label: Results_Coach_Mode
+#| include: TRUE
+
+# Summarize the counts and proportion of responses for each item in df_coaches_both
+Results_Coach_Mode<- df_coaches_both %>%
+  pivot_longer(cols = serve_mode_1:serve_mode_6, names_to = "Item", values_to = "Response") %>%
+  group_by(Item, Response) %>%
+  filter(!is.na(Response)) %>%
+  summarise(Count = n()) %>%
+  mutate(Proportion = Count /85) %>%
+  ungroup() %>%
+  mutate(Mode = c("In-person meetings","Check-in calls","Video calls", "Text messages", "Emails", "Other"))
+
+print(Results_Coach_Mode)
+
+```
+
+### Reason for Becoming Coach  
+
+**Why did you choose to become a [PRC title]? (Select all that apply.)**  
+Desire to help people seeking recovery from a substance use disorder
+As an alternative to full-time paid employment
+My own lived experience or recovery motivated me
+To help my community
+To learn new skills
+I enjoy working with people
+Other (please specify):
+```{r}
+#| label: Results_Coach_Reason
+#| include: TRUE
+
+# Summarize the counts and proportion of responses for each item in df_coaches_both
+Results_Coach_Reason<- df_coaches_both %>%
+  pivot_longer(cols = prc_reason_1:prc_reason_7, names_to = "Item", values_to = "Response") %>%
+  group_by(Item, Response) %>%
+  filter(!is.na(Response)) %>%
+  summarise(Count = n()) %>%
+  mutate(Proportion = Count /85) %>%
+  ungroup() %>%
+  mutate(Reason = c("Desire to help people seeking recovery from a substance use disorder",
+"As an alternative to full-time paid employment",
+"My own lived experience of recovery motivated me",
+"To help my community",
+"To learn new skills",
+"I enjoy working with people",
+"Other"))
+
+print(Results_Coach_Reason)
+
+```
+
+###  Benefits of Being a Coach
+
+**How much do you agree or disagree that you get these benefits out of being a [PRC title]?** 
+- Satisfaction from helping individuals with substance use disorders enter long-term recovery,  
+- Satisfaction from improving the health of my community.  
+Responses were likert scale:  
+Strongly agree  
+Agree  
+Neither agree nor disagree  
+Disagree  
+Strongly disagree  
+```{r}
+#| label: Results_Coach_Benefits
+#| include: TRUE
+
+# Summarize the counts and proportion of responses for each item in df_coaches_both
+Results_Coach_Benefits<- df_coaches_both %>%
+  pivot_longer(cols = agree_prcbenefits_1:agree_prcbenefits_2, names_to = "Item", values_to = "Response") %>%
+  group_by(Item, Response) %>%
+  filter(!is.na(Response)) %>%
+  summarise(Count = n()) %>%
+  mutate(Proportion = Count /85) %>%
+  ungroup() %>%
+  mutate(Benefit = c("HelpIndividuals","HelpIndividuals","HelpIndividuals","ImproveHealth","ImproveHealth","ImproveHealth"), Reason = c("Strongly agree",
+"Agree",
+"Neither agree nor disagree", "Strongly agree",
+"Agree",
+"Neither agree nor disagree" ))
+
+print(Results_Coach_Benefits)
+
+```
+
+### Satisfaction with Aspects of Being a Coach  
+
+```{r}
+#| label: Results_Coach_Satisfaction
+#| include: FALSE
+
+# Summarize the counts and proportion of responses for each item in df_coaches_both
+Results_Coach_Satisfaction <- df_coaches_both %>%
+  pivot_longer(cols = satisfied_prcaspects_1:satisfied_prcaspects_4, names_to = "Item", values_to = "Response") %>%
+  group_by(Item, Response) %>%
+  filter(!is.na(Response)) %>%
+  summarise(Count = n()) %>%
+  mutate(Proportion = Count / sum(Count))%>%
+ungroup() %>%
+  group_by(Item) 
+print(Results_Coach_Satisfaction)
+
+
+```
+ 
+```{r}
+#| label: Results_Coach_Satisfaction_plot
+#| include: TRUE
+
+# Plot the responses as stacked barchart
+# Define labels for the legend
+response_labels_satisfaction <- c("1" = "Very Satisfied",
+"2" = "Satisfied",
+"3" = "Neither satisfied \nnor dissatisfied",
+"4" = "Dissatisfied",
+"5" = "Very dissatisfied")
+
+x_labels_satisfaction <- c( "satisfied_prcaspects_1" = "Training or access \nto training courses \n(n = 72)",
+
+"satisfied_prcaspects_2" = "Social events or opportunities\n for socializing (n = 70)",
+
+"satisfied_prcaspects_3" = "Support, management, and\n mentorship from my \norganization (n = 70)",
+
+"satisfied_prcaspects_4" = "Recognition for my \ncontributions as a\n recovery coach (n = 70)")
+
+ggplot(data = Results_Coach_Satisfaction, aes(x = Item, y = Proportion, fill = Response)) +
+  geom_bar(stat = "identity", position = "fill") +
+   geom_text(aes(label = scales::percent(Proportion, accuracy =1)), position = position_stack(vjust = 0.5),  size  =2,check_overlap = FALSE) +
+  ylab("Response") +
+  scale_x_discrete(labels = x_labels_satisfaction)+
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(hjust = 0.2),
+        legend.title = element_blank(),
+        plot.caption.position = "plot") +
+  scale_fill_discrete(labels= response_labels_satisfaction)+
+  coord_flip()+
+  labs(caption = "*'Decreased'accounted for 1.4% for 'My sense of community and belonging', and 2.9% of 'My health, well-being or fitness'")
+
+```
+
+## Full/part-time employment
+
+```{r}
+#| label: Coach_Descriptives_fullparttime
+#| include: TRUE
+
+Results_Coaches_fullparttime<- df_coaches_both %>%
+    # mutate(ClientHours= factor(serve_clienthours, levels = c("1", "2", "3", "4","5"))) %>%
+  count(prc_fulltime) %>%
+    mutate(proportion = n / sum(n)) 
+
+print(Results_Coaches_fullparttime)
+```
+
+## Years as volunteer
+
+```{r}
+#| label: Coach_Descriptives_prc_years
+#| include: TRUE
+
+Results_Coaches_prc_years<- df_coaches_both %>%
+    # mutate(ClientHours= factor(serve_clienthours, levels = c("1", "2", "3", "4","5"))) %>%
+  count(prc_years) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(ClientHours = c("<1 yr","1-5yrs","Missing Data")) 
+
+print(Results_Coaches_prc_years)
+```
+
+## Long-term recovery of coaches  
+**Are you currently in long-term recovery?**  
+
+```{r}
+#| label: Coach_Descriptives_prc_recovery
+#| include: TRUE
+
+Results_Coaches_prc_recovery <- df_coaches_both %>%
+    mutate(prc_recovery = factor(prc_recovery, levels = c("1", "2", "3"))) %>%
+  count(prc_recovery) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(Recovery = c("Yes","No", "Prefer not to say", "Missing Data")) 
+
+print(Results_Coaches_prc_recovery)
+
+```
+
+## Number of clients seen on weekly basis  
+```{r}
+#| label: Coach_Descriptives_clients_number
+#| include: TRUE
+
+Results_Coaches_serve_number <- df_coaches_both %>%
+  count(serve_number) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(Number_of_Clients = c("<5","5-10", "11-20","21-30", "31+", "Missing Data")) 
+
+print(Results_Coaches_serve_number)
+
+```
