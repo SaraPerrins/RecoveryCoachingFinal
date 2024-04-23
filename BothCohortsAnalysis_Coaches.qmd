@@ -259,7 +259,7 @@ Results_Coaches_Eth <- df_coaches_both %>%
      mutate(dem_ethnicity = factor(dem_ethnicity, levels = c("1", "2", "3"))) %>%
   count(dem_ethnicity) %>%
     mutate(proportion = n / sum(n)) %>%
-  mutate(Hispanic_Latino_Spanish_origin = c("Yes","No", "Don't Know", "Missing Data")) 
+  mutate(Hispanic_Latino_Spanish_origin = c("Yes","No", "Missing Data")) 
 
 print(Results_Coaches_Eth)
 
@@ -350,7 +350,7 @@ Results_Coaches_Training_Helpfulness <- df_coaches_both %>%
     # mutate(TrainingManualUsed = factor(train_manual, levels = c("1", "2", "3"))) %>%
   count(train_helpful) %>%
     mutate(proportion = n / sum(n)) %>%
-  mutate(TrainingHelpfulness = c("Very Helpful","Helpful", "Somewhat Helpful", "Missing Data")) 
+  mutate(TrainingHelpfulness = c("Very Helpful","Helpful", "Missing Data")) 
 
 print(Results_Coaches_Training_Helpfulness)
 
@@ -406,13 +406,13 @@ response_labels <- c("1" = "Increased greatly",
                      "5" = "Decreased greatly", 
                      "NA" = "Missing Data")
 
-x_labels <- c(  "increase_abilities_1" = "My knowledge of risk factors that\nlead to substance use disorder (n = 71)",
-  "increase_abilities_2" = "My ability to help individuals \nwith substance use disorder (n = 71)",
-  "increase_abilities_3" = "My confidence, self-esteem, or \nself-management (n = 71)",
-  "increase_abilities_4" = "Skills like teamwork, communication, \nleadership, or technical skills (n = 71)",
-  "increase_abilities_5" = "My health, well-being, or fitness* (n = 70)",
-  "increase_abilities_6" = "My sense of community and\n belonging* (n = 70)",
-  "increase_abilities_7" = "My own ability to stay in recovery (n = 69)")
+x_labels <- c(  "increase_abilities_1" = "My knowledge of risk factors that\nlead to substance use disorder (n = 59)",
+  "increase_abilities_2" = "My ability to help individuals \nwith substance use disorder (n = 59)",
+  "increase_abilities_3" = "My confidence, self-esteem, or \nself-management (n = 59)",
+  "increase_abilities_4" = "Skills like teamwork, communication, \nleadership, or technical skills (n = 59)",
+  "increase_abilities_5" = "My health, well-being, or fitness* (n = 58)",
+  "increase_abilities_6" = "My sense of community and\n belonging* (n = 58)",
+  "increase_abilities_7" = "My own ability to stay in recovery (n = 57)")
 ggplot(data = df_coaches_both_CoachAbilities, aes(x = Item, y = Proportion, fill = Response)) +
   geom_bar(stat = "identity", position = "fill") +
    geom_text(aes(label = scales::percent(Proportion, accuracy =1)), position = position_stack(vjust = 0.7),  size  =3,check_overlap = TRUE) +
@@ -425,7 +425,7 @@ ggplot(data = df_coaches_both_CoachAbilities, aes(x = Item, y = Proportion, fill
         plot.caption.position = "plot") +
   scale_fill_discrete(labels= response_labels)+
   coord_flip()+
-  labs(caption = "*'Decreased'accounted for 1.4% for 'My sense of community and belonging', and 2.9% of 'My health, well-being or fitness'")
+  labs(caption = "*'Decreased'accounted for 1.7% for 'My sense of community and belonging', and 1.7% of 'My health, well-being or fitness'")
 
 ```
 ### Culturally Appropriate Treatment Plans
@@ -512,7 +512,7 @@ Results_Coaches_ClientHours<- df_coaches_both %>%
     mutate(ClientHours= factor(serve_clienthours, levels = c("1", "2", "3", "4","5"))) %>%
   count(ClientHours) %>%
     mutate(proportion = n / sum(n)) %>%
-  mutate(ClientHours = c("<1hr","1-4hrs", "5-8hrs", "9-16hrs", "17+hrs", "Missing Data")) 
+  mutate(ClientHours = c("<1hr","1-4hrs", "5-8hrs", "17+hrs", "Missing Data")) 
 
 print(Results_Coaches_ClientHours)
 ```
@@ -598,13 +598,11 @@ Results_Coach_Benefits<- df_coaches_both %>%
   group_by(Item, Response) %>%
   filter(!is.na(Response)) %>%
   summarise(Count = n()) %>%
-  mutate(Proportion = Count /85) %>%
+  mutate(Proportion = Count /72) %>%
   ungroup() %>%
-  mutate(Benefit = c("HelpIndividuals","HelpIndividuals","HelpIndividuals","ImproveHealth","ImproveHealth","ImproveHealth"), Reason = c("Strongly agree",
-"Agree",
-"Neither agree nor disagree", "Strongly agree",
-"Agree",
-"Neither agree nor disagree" ))
+  mutate(Benefit = c("HelpIndividuals","HelpIndividuals","ImproveHealth","ImproveHealth"), Reason = c("Strongly agree",
+"Agree", "Strongly agree",
+"Agree" ))
 
 print(Results_Coach_Benefits)
 
@@ -642,13 +640,13 @@ response_labels_satisfaction <- c("1" = "Very Satisfied",
 "4" = "Dissatisfied",
 "5" = "Very dissatisfied")
 
-x_labels_satisfaction <- c( "satisfied_prcaspects_1" = "Training or access \nto training courses \n(n = 72)",
+x_labels_satisfaction <- c( "satisfied_prcaspects_1" = "Training or access \nto training courses \n(n = 60)",
 
-"satisfied_prcaspects_2" = "Social events or opportunities\n for socializing (n = 70)",
+"satisfied_prcaspects_2" = "Social events or opportunities\n for socializing (n = 58)",
 
-"satisfied_prcaspects_3" = "Support, management, and\n mentorship from my \norganization (n = 70)",
+"satisfied_prcaspects_3" = "Support, management, and\n mentorship from my \norganization (n = 58)",
 
-"satisfied_prcaspects_4" = "Recognition for my \ncontributions as a\n recovery coach (n = 70)")
+"satisfied_prcaspects_4" = "Recognition for my \ncontributions as a\n recovery coach (n = 58)")
 
 ggplot(data = Results_Coach_Satisfaction, aes(x = Item, y = Proportion, fill = Response)) +
   geom_bar(stat = "identity", position = "fill") +
@@ -661,8 +659,7 @@ ggplot(data = Results_Coach_Satisfaction, aes(x = Item, y = Proportion, fill = R
         legend.title = element_blank(),
         plot.caption.position = "plot") +
   scale_fill_discrete(labels= response_labels_satisfaction)+
-  coord_flip()+
-  labs(caption = "*'Decreased'accounted for 1.4% for 'My sense of community and belonging', and 2.9% of 'My health, well-being or fitness'")
+  coord_flip()
 
 ```
 
@@ -724,4 +721,40 @@ Results_Coaches_serve_number <- df_coaches_both %>%
 
 print(Results_Coaches_serve_number)
 
+```
+
+### Client session format  
+1 = "Individual sessions/case mgmt",  \n
+2 = "Group sessions", \n
+3 = "Service referrals", \n
+4 = "Other" \n
+
+```{r}
+#| label: Results_Coach_session_format
+#| include: TRUE
+
+# Summarize the counts and proportion of responses for each item in df_coaches_both
+Results_Coach_session_format <- df_coaches_both %>%
+  pivot_longer(cols = services_1:services_4, names_to = "Item", values_to = "Response") %>%
+  group_by(Item, Response) %>%
+  filter(!is.na(Response)) %>%
+  summarise(Count = n()) %>%
+  # mutate(Session_format = c("Individual sessions/case mgmt","Group sessions", "Service referrals","Other")) %>% 
+  mutate(Proportion = Count / sum(Count))%>%
+ungroup() %>%
+  group_by(Item) 
+print(Results_Coach_session_format)
+```
+
+## Certification
+```{r}
+#| label: Coach_Descriptives_certified
+#| include: TRUE
+
+Results_Coaches_certified <- df_coaches_both %>%
+  count(prc_certify) %>%
+    mutate(proportion = n / sum(n)) %>%
+  mutate(prc_certify = c("Yes","No", "Other","Missing Data")) 
+
+print(Results_Coaches_certified)
 ```
