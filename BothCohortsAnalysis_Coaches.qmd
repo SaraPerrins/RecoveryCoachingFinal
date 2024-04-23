@@ -16,7 +16,7 @@ execute:
   echo: false
 ---
 
-This html displays the key outputs of the analysis for the final sample of *N* = 85 recovery coaches. The table of contents on the left can be used to navigate across descriptive statistic categories. *Please note that response rates are still being calculated and will be included in the final report draft 
+This html displays the key outputs of the analysis for the final sample of *N* = 72 recovery coaches. The table of contents on the left can be used to navigate across descriptive statistic categories. *Please note that response rates are still being calculated and will be included in the final report draft 
 
 ```{r}
 #| label: Packages
@@ -142,16 +142,15 @@ df_americorps_c2 <- read_and_merge_files("AmeriCorps Volunteer_cohort2")
 df_coaches_both <- read_and_merge_files("PRC_bothcohorts")
 
 #Cleaning
-df_coaches_both <- subset(df_coaches_both, Progress >50  &DistributionChannel != "qr" & DistributionChannel != "preview" | is.na(Progress) & consent_agree == 1 )  #Leaves us with N = 85
+df_coaches_both <- subset(df_coaches_both, Progress >50  &DistributionChannel != "qr" & DistributionChannel != "preview" | is.na(Progress) & consent_agree == 1 )  #Leaves us with N =72
 
 ```
 
 
-## Coaches Descriptive Statistics (N = 85)
+## Coaches Descriptive Statistics (N = 72)
 
 ### Age
 
-About 68% of the coaches were between ages 18 and 49.  
 
 ```{r}
 #| label: Coaches_Descriptives_Age
@@ -167,7 +166,6 @@ print(Results_Coaches_Age)
 
 ### Gender
 
-61% identified as female while only 22% identified as male.
 
 ```{r}
 #| label: Coaches_Descriptives_Gender
@@ -193,10 +191,6 @@ print(Results_Coaches_Gender)
 ```
 
 ### Race
-
-We had *n* = 20 missing data, so this output must be interpreted with caution. 
-
-Coaches predominantly identified as White (59%) or Black/African American (11%).
 
 ```{r}
 #| label: Coaches_Descriptives_Race
@@ -250,7 +244,6 @@ print(Results_Coaches_Race)
 
 ### Ethnicity
 
-The majority (82%) of coaches were NOT of Hispanic/Latino/Spanish origin.
 
 ```{r}
 #| label: Coach_Descriptives_Ethnicity
@@ -267,7 +260,6 @@ print(Results_Coaches_Eth)
 
 ### Education
 
-91% of our sample had obtained high school education or higher, demonstrating education levels are high among coaches.
 
 ```{r}
 #| label: Coach_Descriptives_Education
@@ -285,7 +277,6 @@ print(Results_Coaches_Education)
 
 **How many hours of recovery coaching training have you received from {organization}**
 
-Coaches who responded most commonly cited 9-16 hrs of training (N = 29) or least 17 hours of recovery coaching training (N = 27).
 
 ```{r}
 #| label: Coach_Descriptives_Training
@@ -305,7 +296,7 @@ print(Results_Coaches_Training)
 
 **Did someone at your organization deliver the training, or was it delivered by someone outside of the organization?**
 
-N = 16 (19% of surveyed coaches) did not respond to this question, so interpretation must be cautious.46% of responses said instructors were from within the organization, and 31% said outside the organization.
+
 
 ```{r}
 #| label: Coach_Descriptives_Training_Delivery
@@ -323,7 +314,7 @@ print(Results_Coaches_Training_Delivery)
 
 **Did the training use a specific curriculum or manual?**
 
-N = 16 (19% of surveyed coaches) did not respond to this question, so interpretation must be cautious. 45% of responses said instructors were from within the organization, and 14% said outside the organization.
+
 
 ```{r}
 #| label: Coach_Descriptives_Training_Manual
@@ -341,7 +332,7 @@ print(Results_Coaches_Training_Manual)
 ### Training Helpfulness
 
 **How helpful was the training?** Responses were recorded on a 4-point Likert scale: Very Helpful, Helpful, Somewhat Helpful, and Not At All Helpful.\
-N = 17 (20% of surveyed coaches) did not respond to this question, so interpretation must be cautious. Nearly 78% of coaches found the trainings to be Very Helpful or Helpful, and no coaches reported that trainings were Not At All Helpful. 
+
 
 ```{r}
 #| label: Coach_Descriptives_Training_Helpfulness
@@ -392,7 +383,7 @@ print(df_coaches_both_CoachAbilities)
 write.csv(df_coaches_both_CoachAbilities, "df_coaches_both_CoachAbilities_NoNAs.csv")
 
 ```
-Most coaches reported various factors of knowledge, skills and attitudes have increased or increased greatly for them since becoming a recovery coach. The graph below shows the responses for each of these factors.  
+ 
 ```{r}
 #| label: Results_Coach_Abilities_plot
 #| include: TRUE
@@ -469,7 +460,7 @@ Results_Coach_ServiceConnections <- df_coaches_both %>%
   group_by(Item, Response) %>%
   filter(!is.na(Response)) %>%
   summarise(Count = n()) %>%
-  mutate(Proportion = Count /85) %>%
+  mutate(Proportion = Count /72) %>%
   ungroup() %>%
   mutate(Service = c("Emergency services","Food services","Employment services", "Physical or behavioral health providers", "Other", "None"))
 
@@ -535,7 +526,7 @@ Results_Coach_Mode<- df_coaches_both %>%
   group_by(Item, Response) %>%
   filter(!is.na(Response)) %>%
   summarise(Count = n()) %>%
-  mutate(Proportion = Count /85) %>%
+  mutate(Proportion = Count /72) %>%
   ungroup() %>%
   mutate(Mode = c("In-person meetings","Check-in calls","Video calls", "Text messages", "Emails", "Other"))
 
@@ -563,7 +554,7 @@ Results_Coach_Reason<- df_coaches_both %>%
   group_by(Item, Response) %>%
   filter(!is.na(Response)) %>%
   summarise(Count = n()) %>%
-  mutate(Proportion = Count /85) %>%
+  mutate(Proportion = Count /72) %>%
   ungroup() %>%
   mutate(Reason = c("Desire to help people seeking recovery from a substance use disorder",
 "As an alternative to full-time paid employment",
